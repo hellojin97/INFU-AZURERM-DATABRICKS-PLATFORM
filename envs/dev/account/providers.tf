@@ -10,9 +10,10 @@ provider "databricks" {
   # var.<이름>으로 variable 블록에 선언된 값을 참조한다.
   account_id = var.databricks_account_id
 
-  # 인증 방식 선택. GitHub OIDC 토큰을 Entra ID 토큰으로 교환한다.
-  # Actions 런타임 환경 변수를 읽으므로 로컬에서는 인증되지 않는다.
-  auth_type = "github-oidc-azure"
+  # 인증 방식 선택. 워크플로의 azure/login이 남긴 az CLI 세션을 그대로 쓴다.
+  # github-oidc-azure는 provider가 직접 OIDC 토큰을 받는데,
+  # audience를 api://AzureADTokenExchange로 지정하지 않아 실패했다.
+  auth_type = "azure-cli"
 
   azure_client_id = var.azure_client_id
   azure_tenant_id = var.azure_tenant_id

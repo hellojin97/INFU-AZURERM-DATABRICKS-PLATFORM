@@ -31,6 +31,9 @@ jobs:
           env: dev
           layer: account
           mode: apply
+          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
   platform:
     needs: account
@@ -43,6 +46,9 @@ jobs:
           env: dev
           layer: platform
           mode: apply
+          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
   workspace:
     needs: platform
@@ -55,3 +61,6 @@ jobs:
           env: dev
           layer: workspace
           mode: apply
+          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}

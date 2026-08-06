@@ -36,6 +36,9 @@ jobs:
           layer: account
           mode: plan
           github-token: ${{ github.token }}
+          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
   platform:
     needs: account
@@ -49,6 +52,9 @@ jobs:
           layer: platform
           mode: plan
           github-token: ${{ github.token }}
+          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
   workspace:
     needs: platform
@@ -62,3 +68,6 @@ jobs:
           layer: workspace
           mode: plan
           github-token: ${{ github.token }}
+          azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
+          azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
