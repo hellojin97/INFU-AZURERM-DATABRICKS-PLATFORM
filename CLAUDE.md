@@ -53,8 +53,15 @@ envs/<env>/workspace/  workspace 내부 거버넌스
 - State backend는 `azurerm` (Storage Account + container). 환경·계층별로 `key`를 분리하고 로컬 state는 커밋하지 않는다
 - 리소스 이름: `<prefix>-<env>-<workload>-<type>` (예: `infu-dev-databricks-ws`). Databricks group/SP 이름도 같은 규칙을 따른다
 - 모든 Azure 리소스에 `env`, `owner`, `managed_by = "terraform"` 태그를 붙인다
+- State backend는 공유 키를 쓰지 않는다. `use_azuread_auth = true`로 Entra ID 인증한다
 - 버전 고정: Terraform `>= 1.15`, provider는 `~>`로 pin, `.terraform.lock.hcl` 커밋
 - Terraform 버전은 워크플로에서 명시 고정하고, 로컬 버전과 일치시킨다 (현재 로컬 기준 1.15.6)
+- lock 파일은 로컬에서 생성한다. state를 건드리지 않고 Azure 자격 증명도 필요 없다. macOS에서만 생성하면 Linux 러너에서 체크섬 불일치로 실패하므로 두 플랫폼을 함께 넣는다
+
+```bash
+terraform init -backend=false
+terraform providers lock -platform=linux_amd64 -platform=darwin_arm64
+```
 
 ## CI/CD 실행 규약
 
@@ -66,11 +73,12 @@ merge   : plan 아티팩트 재사용 → apply tfplan
 env 승격: dev 자동, stg/prd는 GitHub Environment 승인 게이트 필수
 ```
 
-- 로컬에서는 `terraform fmt`/`validate`까지만. `apply`는 파이프라인에서만 실행한다
+- 로컬에서는 `fmt`/`validate`/`init -backend=false`/`providers lock`까지만. `apply`는 파이프라인에서만 실행한다
 - `apply`는 PR에서 생성된 plan 아티팩트에만 적용한다. 파이프라인 밖 `-auto-approve` 금지
 - `terraform destroy`, state 조작(`state rm`/`state mv`/`import`)은 워크플로에 넣지 않는다. 사용자가 명시적으로 요청할 때 별도 수동 절차로 처리한다
-- CI Service Principal은 Azure 구독 Contributor + Databricks Account Admin 권한이 필요하다
-- 자격 증명은 GitHub Environment secret/variable로만 주입한다. `.tfvars`에 secret을 넣지 않는다
+- CI Service Principal은 Azure 구독 `Contributor` + `User Access Administrator` + Databricks Account Admin 권한이 필요하다. 역할 할당을 생성해야 하므로 Contributor만으로는 부족하다
+- 식별자는 GitHub repository variable로 주입한다. OIDC를 쓰므로 저장할 secret이 없다. `.tfvars`에 자격 증명을 넣지 않는다
+- apply job은 반드시 `environment:`를 선언한다. federated credential subject가 environment 단위라 없으면 인증이 실패한다. 공개 저장소이므로 `pull_request_target`은 쓰지 않는다
 
 ## 이 파일의 규약
 
