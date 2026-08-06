@@ -1,0 +1,101 @@
+name: terraform
+description: 지정한 환경·계층 디렉터리에서 Terraform을 실행한다. 디렉터리가 없으면 건너뛴다.
+
+inputs:
+  env:
+    description: 환경 이름 (dev / stg / prd)
+    required: true
+  layer:
+    description: 계층 이름 (account / platform / workspace)
+    required: true
+  mode:
+    description: plan 또는 apply
+    required: true
+  terraform-version:
+    description: 고정할 Terraform 버전
+    required: false
+    default: 1.15.6
+  github-token:
+    description: PR 코멘트 게시용 토큰
+    required: false
+    default: ""
+
+runs:
+  using: composite
+
+  steps:
+    - name: 대상 디렉터리 확인
+      id: target
+      shell: bash
+      run: |
+        DIR="envs/${{ inputs.env }}/${{ inputs.layer }}"
+        echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+        if [ -d "$DIR" ]; then
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+          echo "::notice::$DIR 가 없어 건너뜁니다."
+        fi
+
+    - name: Terraform 설치
+      if: steps.target.outputs.exists == 'true'
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform-version }}
+        # 래퍼가 stdout을 가로채면 plan 출력을 파일로 담을 수 없다.
+        terraform_wrapper: false
+
+    - name: fmt
+      if: steps.target.outputs.exists == 'true'
+      shell: bash
+      working-directory: ${{ steps.target.outputs.dir }}
+      run: terraform fmt -check -recursive
+
+    - name: init
+      if: steps.target.outputs.exists == 'true'
+      shell: bash
+      working-directory: ${{ steps.target.outputs.dir }}
+      run: terraform init -input=false -backend-config=backend.hcl
+
+    - name: validate
+      if: steps.target.outputs.exists == 'true'
+      shell: bash
+      working-directory: ${{ steps.target.outputs.dir }}
+      run: terraform validate
+
+    - name: plan
+      if: steps.target.outputs.exists == 'true'
+      shell: bash
+      working-directory: ${{ steps.target.outputs.dir }}
+      run: |
+        terraform plan -input=false -lock-timeout=5m \
+          -var-file=terraform.tfvars -out=tfplan
+        terraform show -no-color tfplan > plan.txt
+
+    - name: PR에 plan 결과 게시
+      if: >-
+        steps.target.outputs.exists == 'true'
+        && inputs.mode == 'plan'
+        && github.event_name == 'pull_request'
+      shell: bash
+      working-directory: ${{ steps.target.outputs.dir }}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        # PR 코멘트 상한이 65536자라 넉넉히 잘라 붙인다.
+        {
+          echo "### \`${{ inputs.env }} / ${{ inputs.layer }}\` plan"
+          echo
+          echo '```terraform'
+          head -c 60000 plan.txt
+          echo
+          echo '```'
+        } > comment.md
+        gh pr comment "${{ github.event.pull_request.number }}" --body-file comment.md
+
+    - name: apply
+      if: steps.target.outputs.exists == 'true' && inputs.mode == 'apply'
+      shell: bash
+      working-directory: ${{ steps.target.outputs.dir }}
+      # 방금 만든 plan 파일에만 적용한다. -auto-approve는 쓰지 않는다.
+      run: terraform apply -input=false -lock-timeout=5m tfplan

@@ -1,0 +1,57 @@
+name: apply
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC: "true"
+
+  TF_VAR_databricks_account_id: ${{ vars.DATABRICKS_ACCOUNT_ID }}
+  TF_VAR_azure_client_id: ${{ vars.AZURE_CLIENT_ID }}
+  TF_VAR_azure_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+
+jobs:
+  account:
+    runs-on: ubuntu-latest
+    # environment는 승인 게이트이자 OIDC 신원이다.
+    # federated credential subject가 :environment:dev 라서 이 선언이 없으면 인증에 실패한다.
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/terraform
+        with:
+          env: dev
+          layer: account
+          mode: apply
+
+  platform:
+    needs: account
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/terraform
+        with:
+          env: dev
+          layer: platform
+          mode: apply
+
+  workspace:
+    needs: platform
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/terraform
+        with:
+          env: dev
+          layer: workspace
+          mode: apply

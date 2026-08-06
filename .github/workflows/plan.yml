@@ -1,0 +1,64 @@
+name: plan
+
+# 포크 PR은 secret과 OIDC 토큰을 받지 못한다.
+# pull_request_target은 포크 코드에 저장소 권한을 넘기므로 쓰지 않는다.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  id-token: write # OIDC 토큰 발급
+  contents: read
+  pull-requests: write # plan 결과 코멘트
+
+env:
+  # state backend 인증용
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC: "true"
+
+  # databricks provider 변수 주입
+  TF_VAR_databricks_account_id: ${{ vars.DATABRICKS_ACCOUNT_ID }}
+  TF_VAR_azure_client_id: ${{ vars.AZURE_CLIENT_ID }}
+  TF_VAR_azure_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+
+jobs:
+  account:
+    # 포크에서 온 PR은 인증이 불가능하므로 실행하지 않는다.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/terraform
+        with:
+          env: dev
+          layer: account
+          mode: plan
+          github-token: ${{ github.token }}
+
+  platform:
+    needs: account
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/terraform
+        with:
+          env: dev
+          layer: platform
+          mode: plan
+          github-token: ${{ github.token }}
+
+  workspace:
+    needs: platform
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/terraform
+        with:
+          env: dev
+          layer: workspace
+          mode: plan
+          github-token: ${{ github.token }}
