@@ -1,12 +1,9 @@
 name: terraform
-description: 지정한 환경·계층 디렉터리에서 Terraform을 실행한다. 디렉터리가 없으면 건너뛴다.
+description: 지정한 root 모듈 디렉터리에서 Terraform을 실행한다. 디렉터리가 없으면 건너뛴다.
 
 inputs:
-  env:
-    description: 환경 이름 (dev / stg / prd)
-    required: true
-  layer:
-    description: 계층 이름 (account / platform / workspace)
+  dir:
+    description: root 모듈 디렉터리 (account, envs/dev/platform 등)
     required: true
   mode:
     description: plan 또는 apply
@@ -37,13 +34,11 @@ runs:
       id: target
       shell: bash
       run: |
-        DIR="envs/${{ inputs.env }}/${{ inputs.layer }}"
-        echo "dir=$DIR" >> "$GITHUB_OUTPUT"
-        if [ -d "$DIR" ]; then
+        if [ -d "${{ inputs.dir }}" ]; then
           echo "exists=true" >> "$GITHUB_OUTPUT"
         else
           echo "exists=false" >> "$GITHUB_OUTPUT"
-          echo "::notice::$DIR 가 없어 건너뜁니다."
+          echo "::notice::${{ inputs.dir }} 가 없어 건너뜁니다."
         fi
 
     # databricks provider가 auth_type = "azure-cli"로 이 세션을 이어 쓴다.
@@ -67,25 +62,25 @@ runs:
     - name: fmt
       if: steps.target.outputs.exists == 'true'
       shell: bash
-      working-directory: ${{ steps.target.outputs.dir }}
+      working-directory: ${{ inputs.dir }}
       run: terraform fmt -check -recursive
 
     - name: init
       if: steps.target.outputs.exists == 'true'
       shell: bash
-      working-directory: ${{ steps.target.outputs.dir }}
+      working-directory: ${{ inputs.dir }}
       run: terraform init -input=false -backend-config=backend.hcl
 
     - name: validate
       if: steps.target.outputs.exists == 'true'
       shell: bash
-      working-directory: ${{ steps.target.outputs.dir }}
+      working-directory: ${{ inputs.dir }}
       run: terraform validate
 
     - name: plan
       if: steps.target.outputs.exists == 'true'
       shell: bash
-      working-directory: ${{ steps.target.outputs.dir }}
+      working-directory: ${{ inputs.dir }}
       run: |
         terraform plan -input=false -lock-timeout=5m \
           -var-file=terraform.tfvars -out=tfplan
@@ -97,13 +92,13 @@ runs:
         && inputs.mode == 'plan'
         && github.event_name == 'pull_request'
       shell: bash
-      working-directory: ${{ steps.target.outputs.dir }}
+      working-directory: ${{ inputs.dir }}
       env:
         GH_TOKEN: ${{ inputs.github-token }}
       run: |
         # PR 코멘트 상한이 65536자라 넉넉히 잘라 붙인다.
         {
-          echo "### \`${{ inputs.env }} / ${{ inputs.layer }}\` plan"
+          echo "### \`${{ inputs.dir }}\` plan"
           echo
           echo '```terraform'
           head -c 60000 plan.txt
@@ -115,6 +110,6 @@ runs:
     - name: apply
       if: steps.target.outputs.exists == 'true' && inputs.mode == 'apply'
       shell: bash
-      working-directory: ${{ steps.target.outputs.dir }}
+      working-directory: ${{ inputs.dir }}
       # 방금 만든 plan 파일에만 적용한다. -auto-approve는 쓰지 않는다.
       run: terraform apply -input=false -lock-timeout=5m tfplan

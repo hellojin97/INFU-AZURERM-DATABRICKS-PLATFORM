@@ -19,11 +19,12 @@ DAB(Databricks Asset Bundles)로는 만들 수 없는 것 — Account, Workspace
 
 ```
 modules/               재사용 모듈 (provider 블록 없음)
-envs/<env>/account/    Account 레벨   — metastore, SP, group
+account/               Account 레벨   — metastore, group, SP  (계정 전역)
 envs/<env>/platform/   Azure 인프라   — 네트워크, 스토리지, workspace 생성
 envs/<env>/workspace/  Workspace 내부 — 거버넌스, 권한
 ```
 
+- `account/`는 환경별로 나누지 않는다. Databricks account는 테넌트당 하나, metastore는 리전당 하나다. 환경 분리는 metastore 안의 카탈로그로 한다
 - `<env>` = `dev` / `stg` / `prd`. 환경 분리는 디렉터리 방식 (`terraform workspace` 미사용)
 - 각 디렉터리가 독립 root 모듈이자 독립 state 단위
 - 실행 순서: `account` → `platform` → `workspace`
