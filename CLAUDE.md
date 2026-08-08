@@ -38,13 +38,14 @@ DAB가 소유 (Terraform으로 만들지 말 것):
 
 ```
 modules/               재사용 모듈. 환경/이름 하드코딩 금지, provider 블록 금지
-envs/<env>/account/    account 레벨 (metastore, SP, group)
+account/               계정 전역. metastore, account group/SP, entitlement
 envs/<env>/platform/   Azure 인프라 + workspace 생성
 envs/<env>/workspace/  workspace 내부 거버넌스
 ```
 
+- `account/`는 환경별로 나누지 않는다. Databricks account는 테넌트당 하나이고 metastore는 리전당 하나이기 때문이다. 환경 분리는 metastore 안의 카탈로그로 한다
 - 환경(`dev`/`stg`/`prd`) 분리는 **디렉터리 방식**을 쓴다. `terraform workspace`는 쓰지 않는다
-- 각 `envs/<env>/<layer>/`가 독립 root 모듈이자 독립 state 단위다
+- 각 root 모듈 디렉터리가 독립 state 단위다
 - 모듈은 `required_providers`만 선언하고 provider 설정은 root에서 주입한다
 - 계층 간 참조는 `terraform_remote_state` 또는 data source로 하고, 값을 복사해 붙여넣지 않는다
 
@@ -65,16 +66,16 @@ terraform providers lock -platform=linux_amd64 -platform=darwin_arm64
 
 ## CI/CD 실행 규약
 
-파이프라인은 GitHub Actions. 워크플로는 root 모듈 디렉터리(`envs/<env>/<layer>/`)를 working directory로 잡고, `account` → `platform` → `workspace` 순서로 계층을 실행한다.
+파이프라인은 GitHub Actions. 워크플로는 root 모듈 디렉터리를 working directory로 잡고, `account` → 환경별 `platform` → `workspace` 순서로 실행한다.
 
 ```
 PR      : fmt -check -recursive → validate → plan -out=tfplan  (plan 결과를 PR 코멘트로)
-merge   : plan 아티팩트 재사용 → apply tfplan
+merge   : 같은 실행에서 만든 plan 아티팩트에 apply tfplan
 env 승격: dev 자동, stg/prd는 GitHub Environment 승인 게이트 필수
 ```
 
 - 로컬에서는 `fmt`/`validate`/`init -backend=false`/`providers lock`까지만. `apply`는 파이프라인에서만 실행한다
-- `apply`는 PR에서 생성된 plan 아티팩트에만 적용한다. 파이프라인 밖 `-auto-approve` 금지
+- `apply`는 직전에 생성한 plan 아티팩트에만 적용한다. `-auto-approve` 금지
 - `terraform destroy`, state 조작(`state rm`/`state mv`/`import`)은 워크플로에 넣지 않는다. 사용자가 명시적으로 요청할 때 별도 수동 절차로 처리한다
 - CI Service Principal은 Azure 구독 `Contributor` + `User Access Administrator` + Databricks Account Admin 권한이 필요하다. 역할 할당을 생성해야 하므로 Contributor만으로는 부족하다
 - 식별자는 GitHub repository variable로 주입한다. OIDC를 쓰므로 저장할 secret이 없다. `.tfvars`에 자격 증명을 넣지 않는다

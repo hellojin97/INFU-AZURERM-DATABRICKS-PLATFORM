@@ -5,8 +5,9 @@ resource_group_name  = "INFU-TFSTATE-RG-CAC"
 storage_account_name = "infutfstateblobcac"
 container_name       = "tfstate"
 
-# key: 컨테이너 안에서의 state 파일 경로. 환경·계층마다 달라야 한다.
-key = "dev/account.tfstate"
+# key: 컨테이너 안에서의 state 파일 경로.
+# Databricks account는 테넌트당 하나뿐이라 환경 접두사를 붙이지 않는다.
+key = "account.tfstate"
 
 # 스토리지 계정 키 액세스를 껐으므로 Entra ID로 인증한다.
 use_azuread_auth = true

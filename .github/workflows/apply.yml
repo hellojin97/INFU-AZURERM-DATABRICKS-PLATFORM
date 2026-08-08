@@ -19,23 +19,24 @@ env:
   TF_VAR_azure_tenant_id: ${{ vars.AZURE_TENANT_ID }}
 
 jobs:
+  # Databricks account는 테넌트당 하나뿐이라 환경 밖에 둔다.
+  # environment는 승인 게이트이자 OIDC 신원이다.
+  # federated credential subject가 :environment:<name> 이라 이 선언이 없으면 인증에 실패한다.
+  # account 계층은 가장 낮은 게이트인 dev를 쓴다.
   account:
     runs-on: ubuntu-latest
-    # environment는 승인 게이트이자 OIDC 신원이다.
-    # federated credential subject가 :environment:dev 라서 이 선언이 없으면 인증에 실패한다.
     environment: dev
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/terraform
         with:
-          env: dev
-          layer: account
+          dir: account
           mode: apply
           azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-  platform:
+  dev-platform:
     needs: account
     runs-on: ubuntu-latest
     environment: dev
@@ -43,23 +44,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/terraform
         with:
-          env: dev
-          layer: platform
+          dir: envs/dev/platform
           mode: apply
           azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-  workspace:
-    needs: platform
+  dev-workspace:
+    needs: dev-platform
     runs-on: ubuntu-latest
     environment: dev
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/terraform
         with:
-          env: dev
-          layer: workspace
+          dir: envs/dev/workspace
           mode: apply
           azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
