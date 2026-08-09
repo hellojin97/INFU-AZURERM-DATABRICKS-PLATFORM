@@ -77,6 +77,8 @@ env 승격: dev 자동, stg/prd는 GitHub Environment 승인 게이트 필수
 - 로컬에서는 `fmt`/`validate`/`init -backend=false`/`providers lock`까지만. `apply`는 파이프라인에서만 실행한다
 - `apply`는 직전에 생성한 plan 아티팩트에만 적용한다. `-auto-approve` 금지
 - `terraform destroy`, state 조작(`state rm`/`state mv`/`import`)은 워크플로에 넣지 않는다. 사용자가 명시적으로 요청할 때 별도 수동 절차로 처리한다
+- 하위 계층 output의 이름을 바꾸는 변경과 그것을 참조하는 변경은 같은 PR에 넣지 않는다. `terraform_remote_state`는 이미 저장된 state를 읽는데 PR plan은 상위 계층을 apply하지 않아 `Unsupported attribute`로 실패한다. 앞 계층을 먼저 merge·apply하고 참조를 다음 PR로 올린다
+- 리소스의 로컬 이름을 바꿀 때는 `moved` 블록을 함께 넣는다. 주소만 바뀌어도 Terraform은 파괴·재생성으로 처리한다. apply가 끝나면 블록을 지운다
 - CI Service Principal은 Azure 구독 `Contributor` + `User Access Administrator` + Databricks Account Admin 권한이 필요하다. 역할 할당을 생성해야 하므로 Contributor만으로는 부족하다
 - 식별자는 GitHub repository variable로 주입한다. OIDC를 쓰므로 저장할 secret이 없다. `.tfvars`에 자격 증명을 넣지 않는다
 - apply job은 반드시 `environment:`를 선언한다. federated credential subject가 environment 단위라 없으면 인증이 실패한다. 공개 저장소이므로 `pull_request_target`은 쓰지 않는다

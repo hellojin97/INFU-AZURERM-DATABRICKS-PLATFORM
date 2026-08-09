@@ -72,8 +72,6 @@ key        dev/platform.tfstate
 
 `data "terraform_remote_state" "account"`가 `account.tfstate`를 읽어 `metastore_id`와 `workspace_admin_group_ids`를 가져온다. 값을 복사해 붙여넣지 않는다.
 
-**account 계층의 output 이름을 바꾸는 변경과 그것을 참조하는 변경은 같은 PR에 넣지 않는다.** `terraform_remote_state`는 이미 저장된 state를 읽는데, PR plan은 account를 apply하지 않는다. 새 output이 state에 없어 `Unsupported attribute`로 plan이 실패한다. account 변경을 먼저 merge해 apply한 뒤, 참조하는 변경을 다음 PR로 올린다.
-
 이 data 블록의 `config`는 root의 `backend` 블록에서 아무것도 물려받지 않는다. 그래서 `account/backend.hcl`과 같은 값을 다시 적는다.
 
 `use_azuread_auth = true`가 여기 필요하다. 대응 환경 변수 `ARM_USE_AZUREAD`를 워크플로가 설정하지 않고, state Storage Account는 공유 키 액세스를 껐다.
