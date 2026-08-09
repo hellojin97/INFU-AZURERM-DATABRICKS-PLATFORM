@@ -6,6 +6,6 @@ output "metastore_id" {
 
 # for_each로 만든 리소스는 map이 되므로, 키를 유지한 채 값만 바꿔 내보낸다.
 output "uc_admins_group_ids" {
-  value       = { for env, g in databricks_group.uc_admins : env => g.id }
+  value       = { for env, g in databricks_group.ws_admins : env => g.id }
   description = "환경별 Unity Catalog 관리 그룹 ID"
 }
