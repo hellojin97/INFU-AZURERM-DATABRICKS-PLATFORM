@@ -23,9 +23,15 @@ resource "databricks_metastore" "this" {
 # metastore와 달리 이름에 리전 약어를 넣지 않는다.
 # account 그룹은 계정 전역 식별자라 리전에 속하지 않고,
 # 여러 리전의 metastore에 동시에 권한을 가질 수 있다.
-resource "databricks_group" "ws_admins" {
+resource "databricks_group" "workspace_admin_group" {
   for_each = toset(var.environments)
 
   provider     = databricks.account
-  display_name = upper("${var.prefix}-${each.value}-ws-admins-${var.location_abbreviation}")
+  display_name = upper("${var.prefix}-${each.value}-ws-admins")
+}
+
+# moved 블록: 파괴·재생성 대신 state 안의 리소스 주소만 옮긴다. from과 to는 주소다.
+moved {
+  from = databricks_group.ws_admins
+  to   = databricks_group.workspace_admin_group
 }
