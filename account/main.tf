@@ -29,9 +29,3 @@ resource "databricks_group" "workspace_admin_group" {
   provider     = databricks.account
   display_name = upper("${var.prefix}-${each.value}-ws-admins")
 }
-
-# moved 블록: 파괴·재생성 대신 state 안의 리소스 주소만 옮긴다. from과 to는 주소다.
-moved {
-  from = databricks_group.ws_admins
-  to   = databricks_group.workspace_admin_group
-}
