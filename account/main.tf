@@ -6,7 +6,7 @@ resource "databricks_metastore" "this" {
 
   # ${...}는 문자열 안에 식을 끼워 넣는 보간 문법이다.
   # metastore 이름은 계정 전체에서 유일해야 하므로 접두사를 붙인다.
-  name = "${var.prefix}-uc-metastore-${var.location_abbreviation}"
+  name = upper("${var.prefix}-uc-metastore-${var.location_abbreviation}")
 
   # 계정 레벨 metastore에서는 필수다.
   region = var.location
