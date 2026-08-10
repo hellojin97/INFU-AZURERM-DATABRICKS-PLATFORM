@@ -19,6 +19,38 @@ env:
   TF_VAR_azure_tenant_id: ${{ vars.AZURE_TENANT_ID }}
 
 jobs:
+  # apply 체인과 병렬로 돈다. needs로 묶지 않아 알림 실패가 배포를 막지 않는다.
+  # 커밋 메시지는 env로 받아 jq --arg로 조립한다. JSON에 직접 보간하면 따옴표에 깨지고 injection 여지가 있다.
+  notify-start:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Teams 시작 알림
+        env:
+          WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          jq -n --arg msg "$COMMIT_MSG" --arg actor "$ACTOR" --arg url "$RUN_URL" '
+          {
+            type: "message",
+            attachments: [{
+              contentType: "application/vnd.microsoft.card.adaptive",
+              content: {
+                type: "AdaptiveCard",
+                version: "1.4",
+                body: [
+                  { type: "TextBlock", text: "🔄 Terraform apply 시작", weight: "Bolder", size: "Medium" },
+                  { type: "FactSet", facts: [
+                    { title: "커밋", value: $msg },
+                    { title: "실행자", value: $actor }
+                  ]},
+                  { type: "TextBlock", text: "[run 보기](\($url))", wrap: true }
+                ]
+              }
+            }]
+          }' | curl -sf -X POST -H "Content-Type: application/json" -d @- "$WEBHOOK_URL"
+
   # Databricks account는 테넌트당 하나뿐이라 환경 밖에 둔다.
   # environment는 승인 게이트이자 OIDC 신원이다.
   # federated credential subject가 :environment:<name> 이라 이 선언이 없으면 인증에 실패한다.
@@ -63,3 +95,49 @@ jobs:
           azure-client-id: ${{ vars.AZURE_CLIENT_ID }}
           azure-tenant-id: ${{ vars.AZURE_TENANT_ID }}
           azure-subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+  # if: always() — 앞 job이 실패해도 결과는 알린다. 없으면 실패 시 이 job이 skip돼 알림이 안 온다.
+  notify-result:
+    needs: [account, dev-platform, dev-workspace]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Teams 결과 알림
+        env:
+          WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          RESULT_ACCOUNT: ${{ needs.account.result }}
+          RESULT_PLATFORM: ${{ needs.dev-platform.result }}
+          RESULT_WORKSPACE: ${{ needs.dev-workspace.result }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$RESULT_ACCOUNT" = "success" ] && [ "$RESULT_PLATFORM" = "success" ] && [ "$RESULT_WORKSPACE" = "success" ]; then
+            TITLE="✅ Terraform apply 성공"
+            COLOR="Good"
+          else
+            TITLE="❌ Terraform apply 실패"
+            COLOR="Attention"
+          fi
+          jq -n --arg title "$TITLE" --arg color "$COLOR" \
+                --arg a "$RESULT_ACCOUNT" --arg p "$RESULT_PLATFORM" --arg w "$RESULT_WORKSPACE" \
+                --arg msg "$COMMIT_MSG" --arg url "$RUN_URL" '
+          {
+            type: "message",
+            attachments: [{
+              contentType: "application/vnd.microsoft.card.adaptive",
+              content: {
+                type: "AdaptiveCard",
+                version: "1.4",
+                body: [
+                  { type: "TextBlock", text: $title, weight: "Bolder", size: "Medium", color: $color },
+                  { type: "FactSet", facts: [
+                    { title: "account", value: $a },
+                    { title: "dev-platform", value: $p },
+                    { title: "dev-workspace", value: $w },
+                    { title: "커밋", value: $msg }
+                  ]},
+                  { type: "TextBlock", text: "[run 보기](\($url))", wrap: true }
+                ]
+              }
+            }]
+          }' | curl -sf -X POST -H "Content-Type: application/json" -d @- "$WEBHOOK_URL"
