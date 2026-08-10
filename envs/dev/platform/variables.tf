@@ -60,3 +60,8 @@ variable "subnet_private_cidr" {
   type        = string
   description = "Databricks private(container) 서브넷 주소 범위"
 }
+
+variable "subnet_privatelink_cidr" {
+  type        = string
+  description = "Private Endpoint 전용 서브넷 주소 범위"
+}

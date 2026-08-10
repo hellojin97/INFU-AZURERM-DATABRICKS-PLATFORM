@@ -47,6 +47,16 @@ resource "azurerm_subnet" "private" {
   }
 }
 
+# Private Endpoint 전용 서브넷. delegation 블록이 없다.
+# PE는 위임된 서브넷에 들어갈 수 없어서 Databricks 서브넷 두 개와 분리한다.
+# NSG association도 붙이지 않는다. PE의 NIC는 Databricks 규칙과 무관하다.
+resource "azurerm_subnet" "privatelink" {
+  name                 = "${local.name_prefix}-PRIVATELINK-SNET-${local.location_abbreviation}"
+  resource_group_name  = azurerm_resource_group.network.name
+  virtual_network_name = azurerm_virtual_network.this.name
+  address_prefixes     = [var.subnet_privatelink_cidr]
+}
+
 # security_rule 블록을 두지 않는다. workspace 생성 시 Databricks가 규칙을 직접 넣기 때문이다.
 resource "azurerm_network_security_group" "this" {
   name                = "${local.name_prefix}-DATABRICKS-NSG-${local.location_abbreviation}"
@@ -65,4 +75,33 @@ resource "azurerm_subnet_network_security_group_association" "public" {
 resource "azurerm_subnet_network_security_group_association" "private" {
   subnet_id                 = azurerm_subnet.private.id
   network_security_group_id = azurerm_network_security_group.this.id
+}
+
+# 사설 DNS 영역. 이름은 Azure가 정한 고정 문자열이라 바꾸면 해석이 안 된다.
+# ADLS는 dfs(파일시스템 API)와 blob 두 영역이 모두 필요하다.
+resource "azurerm_private_dns_zone" "dfs" {
+  name                = "privatelink.dfs.core.windows.net"
+  resource_group_name = azurerm_resource_group.network.name
+  tags                = local.tags
+}
+
+resource "azurerm_private_dns_zone" "blob" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = azurerm_resource_group.network.name
+  tags                = local.tags
+}
+
+# 영역을 VNet에 연결해야 VNet 안 클러스터가 스토리지 이름을 사설 IP로 해석한다.
+resource "azurerm_private_dns_zone_virtual_network_link" "dfs" {
+  name                = "${local.name_prefix}-DFS-DNS-LINK-${local.location_abbreviation}"
+  private_dns_zone_id = azurerm_private_dns_zone.dfs.id
+  virtual_network_id  = azurerm_virtual_network.this.id
+  tags                = local.tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
+  name                = "${local.name_prefix}-BLOB-DNS-LINK-${local.location_abbreviation}"
+  private_dns_zone_id = azurerm_private_dns_zone.blob.id
+  virtual_network_id  = azurerm_virtual_network.this.id
+  tags                = local.tags
 }

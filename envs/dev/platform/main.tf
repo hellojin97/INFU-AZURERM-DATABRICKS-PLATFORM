@@ -32,3 +32,10 @@ resource "azurerm_resource_group" "databricks" {
   location = var.location
   tags     = local.tags
 }
+
+# ADLS Gen2, KeyVault 등 플랫폼 스토리지가 들어갈 RG. 네트워크·workspace RG와 수명 주기를 분리한다.
+resource "azurerm_resource_group" "platform" {
+  name     = "${local.name_prefix}-PLATFORM-RG-${local.location_abbreviation}"
+  location = var.location
+  tags     = local.tags
+}
