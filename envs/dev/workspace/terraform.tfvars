@@ -1,0 +1,2 @@
+prefix = "infu"
+env    = "dev"
