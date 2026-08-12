@@ -29,3 +29,22 @@ resource "databricks_grants" "managed_location" {
     privileges = ["BROWSE"]
   }
 }
+
+# name: SQL 식별자라 언더스코어. env로 환경 구분
+# storage_root: managed table 저장 경로
+# ISOLATED: 현재 workspace만 바인딩. 기본 OPEN = 전 workspace 노출
+resource "databricks_catalog" "this" {
+  name           = "${var.prefix}_${var.env}"
+  storage_root   = databricks_external_location.managed.url
+  isolation_mode = "ISOLATED"
+  comment        = "개발 환경 기본 카탈로그"
+}
+
+resource "databricks_grants" "catalog" {
+  catalog = databricks_catalog.this.name
+
+  grant {
+    principal  = "${local.name_prefix}-WS-ADMINS"
+    privileges = ["ALL_PRIVILEGES"]
+  }
+}
