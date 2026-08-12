@@ -22,3 +22,8 @@ output "adls_storage_account_name" {
   value       = azurerm_storage_account.adls.name
   description = "external location URL 조립에 쓸 ADLS 계정 이름."
 }
+
+output "managed_container_name" {
+  value       = azurerm_storage_container.managed.name
+  description = "catalog managed storage로 쓸 ADLS container 이름. external location URL 조립에 쓴다."
+}
