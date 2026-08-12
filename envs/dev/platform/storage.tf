@@ -91,3 +91,11 @@ resource "azurerm_role_assignment" "adls_connector" {
   # identity는 list 속성이라 [0]으로 꺼낸다.
   principal_id = azurerm_databricks_access_connector.this.identity[0].principal_id
 }
+
+# HNS SA에서 container = ADLS filesystem. catalog managed storage 용도.
+# storage_account_id 지정 시 Resource Manager API 사용.
+# data-plane 리소스(storage_data_lake_gen2_filesystem)는 public access 차단 SA라 403.
+resource "azurerm_storage_container" "managed" {
+  name               = "managed"
+  storage_account_id = azurerm_storage_account.adls.id
+}
