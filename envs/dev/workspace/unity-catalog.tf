@@ -18,3 +18,14 @@ resource "databricks_external_location" "managed" {
   name            = "${local.name_prefix}-MANAGED-LOCATION"
   url             = "abfss://${data.terraform_remote_state.platform.outputs.managed_container_name}@${data.terraform_remote_state.platform.outputs.adls_storage_account_name}.dfs.core.windows.net/"
 }
+
+# grants는 객체당 하나. 여기 없는 grant는 apply 때 제거된다 (owner 권한은 별개).
+# BROWSE만: managed storage 영역이라 파일 직접 접근 권한은 주지 않는다.
+resource "databricks_grants" "managed_location" {
+  external_location = databricks_external_location.managed.id
+
+  grant {
+    principal  = "${local.name_prefix}-WS-ADMINS"
+    privileges = ["BROWSE"]
+  }
+}
