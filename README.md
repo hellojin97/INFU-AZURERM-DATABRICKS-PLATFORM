@@ -25,7 +25,7 @@ envs/<env>/workspace/  Workspace 내부 — 거버넌스, 권한
 ```
 
 - `account/`는 환경별로 나누지 않는다. Databricks account는 테넌트당 하나, metastore는 리전당 하나다. 환경 분리는 metastore 안의 카탈로그로 한다
-- `<env>` = `dev` / `stg` / `prd`. 환경 분리는 디렉터리 방식 (`terraform workspace` 미사용)
+- `<env>` = `dev` / `prd`. 환경 분리는 디렉터리 방식 (`terraform workspace` 미사용)
 - 각 디렉터리가 독립 root 모듈이자 독립 state 단위
 - 실행 순서: `account` → `platform` → `workspace`
 
@@ -35,7 +35,7 @@ envs/<env>/workspace/  Workspace 내부 — 거버넌스, 권한
 
 - PR: `fmt -check` → `validate` → `plan` (결과를 PR 코멘트로)
 - merge: PR에서 만든 plan 아티팩트로 `apply`
-- `dev`는 자동, `stg`/`prd`는 GitHub Environment 승인 게이트
+- `dev`는 자동, `prd`는 GitHub Environment 승인 게이트
 
 로컬에서는 `terraform fmt`, `terraform validate`까지만 돌린다.
 

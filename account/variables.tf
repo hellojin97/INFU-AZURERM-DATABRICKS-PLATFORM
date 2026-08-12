@@ -41,8 +41,8 @@ variable "environments" {
   description = "account group을 만들 환경 목록. Databricks account는 하나뿐이라 이 계층이 모든 환경의 계정 레벨 객체를 소유한다."
 
   validation {
-    condition     = alltrue([for e in var.environments : contains(["dev", "stg", "prd"], e)])
-    error_message = "environments의 각 항목은 dev, stg, prd 중 하나여야 합니다."
+    condition     = alltrue([for e in var.environments : contains(["dev", "prd"], e)])
+    error_message = "environments의 각 항목은 dev, prd 중 하나여야 합니다."
   }
 }
 

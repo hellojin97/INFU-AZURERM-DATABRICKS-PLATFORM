@@ -44,7 +44,7 @@ envs/<env>/workspace/  workspace 내부 거버넌스
 ```
 
 - `account/`는 환경별로 나누지 않는다. Databricks account는 테넌트당 하나이고 metastore는 리전당 하나이기 때문이다. 환경 분리는 metastore 안의 카탈로그로 한다
-- 환경(`dev`/`stg`/`prd`) 분리는 **디렉터리 방식**을 쓴다. `terraform workspace`는 쓰지 않는다
+- 환경(`dev`/`prd`) 분리는 **디렉터리 방식**을 쓴다. `terraform workspace`는 쓰지 않는다
 - 각 root 모듈 디렉터리가 독립 state 단위다
 - 모듈은 `required_providers`만 선언하고 provider 설정은 root에서 주입한다
 - 계층 간 참조는 `terraform_remote_state` 또는 data source로 하고, 값을 복사해 붙여넣지 않는다
@@ -71,7 +71,7 @@ terraform providers lock -platform=linux_amd64 -platform=darwin_arm64
 ```
 PR      : fmt -check -recursive → validate → plan -out=tfplan  (plan 결과를 PR 코멘트로)
 merge   : 같은 실행에서 만든 plan 아티팩트에 apply tfplan
-env 승격: dev 자동, stg/prd는 GitHub Environment 승인 게이트 필수
+env 승격: dev 자동, prd는 GitHub Environment 승인 게이트 필수
 ```
 
 - 로컬에서는 `fmt`/`validate`/`init -backend=false`/`providers lock`까지만. `apply`는 파이프라인에서만 실행한다

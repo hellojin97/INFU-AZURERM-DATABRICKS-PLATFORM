@@ -40,12 +40,13 @@ issuer `https://token.actions.githubusercontent.com`, audience `api://AzureADTok
 |---|---|
 | `GH-PULL-REQUEST` | `repo:hellojin97@96719728/INFU-AZURERM-DATABRICKS-PLATFORM@1325315048:pull_request` |
 | `GH-ENVIRONMENT-DEV` | `...:environment:dev` |
-| `GH-ENVIRONMENT-STG` | `...:environment:stg` |
 | `GH-ENVIRONMENT-PRD` | `...:environment:prd` |
 
 subject에 붙은 숫자는 GitHub의 immutable subject claim 형식이다. 2026-07-15 이후 생성된 저장소는 이름 대신 owner ID(`96719728`)와 repo ID(`1325315048`)를 쓴다. 저장소를 rename하거나 transfer해도 자격 증명이 깨지지 않는다.
 
-`pull_request`용과 environment용 subject가 다르므로 넷 다 필요하다. plan은 environment 없이 PR에서 돌고, apply는 environment를 거친다.
+`pull_request`용과 environment용 subject가 다르므로 셋 다 필요하다. plan은 environment 없이 PR에서 돌고, apply는 environment를 거친다.
+
+처음에는 stg를 포함해 만들었으나 2026-08-12에 stg 환경을 없애면서 `GH-ENVIRONMENT-STG` 자격 증명과 GitHub Environment `stg`를 삭제했다.
 
 ### 역할 할당
 
@@ -106,7 +107,6 @@ Environment 보호 규칙은 private 저장소에서 Pro 이상을 요구한다.
 | 이름 | 배포 브랜치 | 필수 승인자 | 자기 승인 |
 |---|---|---|---|
 | `dev` | `main` | 없음 | — |
-| `stg` | `main` | `hellojin97` | 허용 |
 | `prd` | `main` | `hellojin97` | 허용 |
 
 1인 저장소이므로 자기 승인을 막으면 apply가 영원히 대기한다.
@@ -132,12 +132,12 @@ plan job은 environment 없이 PR에서 돌기 때문에 environment 변수를 �
 
 1. 리소스 공급자 등록
 2. Entra 앱 등록 → 클라이언트 ID, 테넌트 ID 확보
-3. 페더레이션 자격 증명 4개
+3. 페더레이션 자격 증명 3개
 4. 구독 역할 할당 2개
 5. state용 리소스 그룹 + Storage Account + 컨테이너 → SP에 `Storage Blob Data Contributor`
 6. 삭제 잠금
 7. Databricks accounts 콘솔 → Account ID 확보, SP를 Account Admin 등록
-8. GitHub Environment 3개, repository variable 4개
+8. GitHub Environment 2개, repository variable 4개
 
 ## 주의
 

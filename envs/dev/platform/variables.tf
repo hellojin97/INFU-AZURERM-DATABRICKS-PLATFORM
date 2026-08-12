@@ -26,8 +26,8 @@ variable "env" {
   description = "환경 이름"
 
   validation {
-    condition     = contains(["dev", "stg", "prd"], var.env)
-    error_message = "env는 dev, stg, prd 중 하나여야 합니다."
+    condition     = contains(["dev", "prd"], var.env)
+    error_message = "env는 dev, prd 중 하나여야 합니다."
   }
 }
 
