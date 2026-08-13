@@ -45,6 +45,6 @@ resource "databricks_grants" "catalog" {
 
   grant {
     principal  = "${local.name_prefix}-WS-ADMINS"
-    privileges = ["ALL_PRIVILEGES", "READ_METADATA"]
+    privileges = ["ALL_PRIVILEGES"]
   }
 }
