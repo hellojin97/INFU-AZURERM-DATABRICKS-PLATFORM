@@ -34,7 +34,7 @@ envs/<env>/workspace/  Workspace 내부 — 거버넌스, 권한
 **CI/CD 전용 저장소다. 로컬 apply는 하지 않는다.**
 
 - PR: `fmt -check` → `validate` → `plan` (결과를 PR 코멘트로)
-- merge: PR에서 만든 plan 아티팩트로 `apply`
+- merge: apply job이 같은 실행에서 `plan`을 새로 만들고 그 `tfplan`에만 `apply`
 - `dev`는 자동, `prd`는 GitHub Environment 승인 게이트
 
 로컬에서는 `terraform fmt`, `terraform validate`까지만 돌린다.

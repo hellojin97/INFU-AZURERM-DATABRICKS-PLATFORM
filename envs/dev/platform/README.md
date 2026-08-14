@@ -6,26 +6,34 @@ workspace를 **만드는** 계층이다. workspace 안을 **설정하는** 것�
 
 ## 소유하는 것
 
-| 리소스 | 이름 |
+| 리소스 | 이름 · 비고 |
 |---|---|
-| `azurerm_resource_group` × 2 | `INFU-DEV-NETWORK-RG-CAC`, `INFU-DEV-DATABRICKS-RG-CAC` |
+| `azurerm_resource_group` × 3 | `INFU-DEV-NETWORK-RG-CAC`, `INFU-DEV-DATABRICKS-RG-CAC`, `INFU-DEV-PLATFORM-RG-CAC` |
 | `azurerm_virtual_network` | `INFU-DEV-DATABRICKS-VNET-CAC` (`10.10.0.0/16`) |
-| `azurerm_subnet` × 2 | `...-PUBLIC-SNET-CAC` (`10.10.1.0/24`), `...-PRIVATE-SNET-CAC` (`10.10.2.0/24`) |
-| `azurerm_network_security_group` | `INFU-DEV-DATABRICKS-NSG-CAC` |
-| `azurerm_subnet_network_security_group_association` × 2 | 두 서브넷에 같은 NSG |
+| `azurerm_subnet` × 3 | `...-PUBLIC-SNET` (`10.10.1.0/24`), `...-PRIVATE-SNET` (`10.10.2.0/24`) — Databricks 위임. `...-PRIVATELINK-SNET` (`10.10.3.0/24`) — 위임 없음, PE 전용 |
+| `azurerm_network_security_group` | `INFU-DEV-DATABRICKS-NSG-CAC` + association × 2 (Databricks 서브넷만) |
+| `azurerm_private_dns_zone` × 2 | `privatelink.dfs.core.windows.net`, `privatelink.blob.core.windows.net` + VNet link × 2 |
+| `azurerm_storage_account` | `infudevadlscac` — ADLS Gen2(HNS), 공용 접근 차단, 공유 키 해제 |
+| `azurerm_private_endpoint` × 2 | `...-ADLS-DFS-PE-CAC`, `...-ADLS-BLOB-PE-CAC` — subresource당 하나 |
+| `azurerm_storage_container` | `managed` — catalog managed storage용 filesystem |
+| `azurerm_databricks_access_connector` | `INFU-DEV-DATABRICKS-AC-CAC` — UC storage credential용 관리 ID |
+| `azurerm_role_assignment` | Access Connector에 `Storage Blob Data Contributor` (SA 범위로 한정) |
 | `azurerm_databricks_workspace` | `INFU-DEV-DATABRICKS-WS-CAC` (premium, VNet injection) |
 | `databricks_metastore_assignment` | account 계층의 metastore를 이 workspace에 연결 |
 | `databricks_mws_permission_assignment` | account 계층의 `INFU-DEV-WS-ADMINS` 그룹을 이 workspace에 `ADMIN`으로 바인딩 |
 
 `INFU-DEV-DATABRICKS-MANAGED-RG-CAC`는 Terraform이 만들지 않는다. workspace 생성 시 Databricks가 만들고 관리한다.
 
-## 리소스 그룹을 둘로 나눈 이유
+## 리소스 그룹을 셋으로 나눈 이유
 
-VNet의 소비자가 workspace 하나가 아니다. ADLS Gen2와 Key Vault를 Private Endpoint로 붙이면 그 PE도 이 VNet의 서브넷에 들어온다. 여러 대상이 공유하는 리소스를 그중 하나의 그룹에 얹지 않는다.
+| RG | 담는 것 | 기준 |
+|---|---|---|
+| `NETWORK` | VNet, 서브넷, NSG, DNS 영역, PE | 여러 대상이 공유하는 네트워크 객체. PE와 그 NIC도 네트워크 소속 |
+| `DATABRICKS` | workspace | 워크로드 단위 |
+| `PLATFORM` | ADLS, Access Connector, (예정) Key Vault | 플랫폼 스토리지. 네트워크·workspace와 수명 주기 분리 |
 
-리소스 그룹 이름은 리소스 ID에 박힌다. 나중에 옮기면 VNet과 workspace가 파괴 후 재생성된다.
-
-다만 **두 그룹 모두 이 계층의 같은 state에 있다.** 그룹을 나눈다고 생명주기가 나뉘지는 않는다. 얻는 것은 RBAC 범위와 포털에서의 실수 방지다. 진짜 분리가 필요하면 `envs/dev/network/`를 별도 root 모듈로 만든다.
+- 리소스 그룹 이름은 리소스 ID에 박힌다 — 나중에 옮기면 파괴 후 재생성
+- **세 그룹 모두 이 계층의 같은 state다.** 나눠서 얻는 것은 RBAC 범위와 포털 실수 방지. 진짜 분리가 필요하면 별도 root 모듈로 만든다
 
 ## 의도적으로 정한 값
 
@@ -35,6 +43,12 @@ VNet의 소비자가 workspace 하나가 아니다. ADLS Gen2와 Key Vault를 Pr
 | `no_public_ip = true` | Secure Cluster Connectivity. 클러스터에 공인 IP를 주지 않는다 |
 | NSG에 `security_rule` 없음 | workspace 생성 시 Databricks가 필요한 규칙을 직접 넣는다. 인라인으로 적으면 매 plan마다 그것을 지우려 든다 |
 | 두 서브넷 모두 `delegation` | `virtual_network_id`를 쓰는 workspace는 두 서브넷 다 `Microsoft.Databricks/workspaces`에 위임되어야 한다 |
+| PRIVATELINK 서브넷 분리 | PE는 위임된 서브넷에 못 들어간다. NSG association도 없다 — PE NIC는 Databricks 규칙과 무관 |
+| `public_network_access_enabled = false` | ADLS 접근은 PE로만. dev부터 PE — prd와 구성 일치 |
+| `shared_access_key_enabled = false` | state SA와 같은 원칙. Entra ID 인증만 허용 |
+| `is_hns_enabled = true` | ADLS Gen2 스위치. 생성 후 변경 불가 |
+| container에 `storage_account_id` | ARM API로 생성. data-plane API는 공용 접근 차단 SA라 403 |
+| PE × 2 (dfs·blob) | PE 하나가 subresource 하나. ADLS는 두 영역 모두 필요 |
 
 `custom_parameters`는 서브넷 ID가 아니라 **NSG 연결 리소스의 ID**를 받는다. 이 참조가 "NSG 연결 먼저, workspace 나중" 순서를 만든다.
 
@@ -47,9 +61,10 @@ VNet의 소비자가 workspace 하나가 아니다. ADLS Gen2와 Key Vault를 Pr
 | `variables.tf` | 입력 변수 선언 |
 | `terraform.tfvars` | 환경 값. secret 없음 |
 | `backend.hcl` | backend 부분 설정. `init -backend-config`로 주입 |
-| `main.tf` | locals, 리소스 그룹 |
-| `network.tf` | VNet, 서브넷, NSG |
-| `workspace.tf` | workspace, metastore assignment |
+| `main.tf` | locals, 리소스 그룹 × 3 |
+| `network.tf` | VNet, 서브넷, NSG, 사설 DNS 영역 |
+| `storage.tf` | ADLS, PE, Access Connector, 역할 할당, container |
+| `workspace.tf` | workspace, metastore assignment, permission assignment |
 | `outputs.tf` | workspace 계층이 remote state로 읽는 출력 |
 | `.terraform.lock.hcl` | provider 체크섬. `linux_amd64` + `darwin_arm64` |
 
@@ -94,7 +109,4 @@ terraform validate
 | 항목 | 메모 |
 |---|---|
 | NAT Gateway | `no_public_ip = true` 클러스터의 egress. 없어도 apply는 통과하지만 클러스터 기동은 별개로 확인해야 한다 |
-| Access Connector | Unity Catalog storage credential용 관리 ID. `Storage Blob Data Contributor` 역할 할당 필요 |
-| ADLS Gen2 | 카탈로그별 스토리지. 계정 이름은 **소문자와 숫자만** 가능하다 |
-| Key Vault | secret scope 백엔드 |
-| Private Endpoint | ADLS·Key Vault용. 이 VNet의 서브넷에 자리 잡는다 |
+| Key Vault | secret scope 백엔드. PE는 PRIVATELINK 서브넷에 추가 |

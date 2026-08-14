@@ -8,7 +8,7 @@ Azure 위 Databricks 플랫폼을 Terraform으로 프로비저닝하는 IaC 저�
 
 이 저장소는 **CI/CD 전용**이다. 모든 `init`/`plan`/`apply`는 파이프라인에서 실행되며, 로컬 apply는 하지 않는다.
 
-현재 저장소는 비어 있다. 아래는 관찰된 구조가 아니라 앞으로 코드를 추가할 때 지켜야 할 규약이다.
+구현 현황: `account/`, `envs/dev/platform/`, `envs/dev/workspace/` 구현됨. `modules/`, `envs/prd/`는 아직 없다. 아래 규약은 앞으로 추가되는 코드에도 동일하게 적용된다.
 
 ## 소유권 경계 (가장 중요)
 
