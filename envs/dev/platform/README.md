@@ -20,6 +20,7 @@ workspace를 **만드는** 계층이다. workspace 안을 **설정하는** 것�
 | `azurerm_role_assignment` | Access Connector에 `Storage Blob Data Contributor` (SA 범위로 한정) |
 | `azurerm_databricks_workspace` | `INFU-DEV-DATABRICKS-WS-CAC` (premium, VNet injection) |
 | `databricks_metastore_assignment` | account 계층의 metastore를 이 workspace에 연결 |
+| `databricks_mws_permission_assignment` | 콘솔 수동 그룹 3종 바인딩 — `WS-ADMINS`는 `ADMIN`, `CATALOG-ADMINS`·`WS-USERS`는 `USER` |
 
 `INFU-DEV-DATABRICKS-MANAGED-RG-CAC`는 Terraform이 만들지 않는다. workspace 생성 시 Databricks가 만들고 관리한다.
 
