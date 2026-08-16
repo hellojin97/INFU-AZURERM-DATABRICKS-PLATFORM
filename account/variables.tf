@@ -36,16 +36,6 @@ variable "location_abbreviation" {
   description = "metastore를 만들 Azure 리전의 약어."
 }
 
-variable "environments" {
-  type        = list(string)
-  description = "account group을 만들 환경 목록. Databricks account는 하나뿐이라 이 계층이 모든 환경의 계정 레벨 객체를 소유한다."
-
-  validation {
-    condition     = alltrue([for e in var.environments : contains(["dev", "prd"], e)])
-    error_message = "environments의 각 항목은 dev, prd 중 하나여야 합니다."
-  }
-}
-
 # owner 태그 변수는 이 계층에 두지 않는다.
 # Databricks 리소스에는 Azure 태그가 없어 쓸 곳이 없고,
 # databricks_metastore의 owner는 태그가 아니라 소유 principal이라 의미가 다르다.

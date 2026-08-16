@@ -16,23 +16,3 @@ resource "databricks_metastore" "this" {
   # owner도 지금은 지정하지 않는다. CI SP가 속하지 않은 그룹을 소유자로 두면
   # 이후 SP가 metastore를 수정하지 못할 수 있다. 4단계에서 다시 다룬다.
 }
-
-# for_each: 컬렉션의 각 원소마다 리소스를 하나씩 만든다.
-# list는 set으로 바꿔야 하며, 각 원소는 each.value로 참조한다.
-#
-# metastore와 달리 이름에 리전 약어를 넣지 않는다.
-# account 그룹은 계정 전역 식별자라 리전에 속하지 않고,
-# 여러 리전의 metastore에 동시에 권한을 가질 수 있다.
-resource "databricks_group" "workspace_admin_group" {
-  for_each = toset(var.environments)
-
-  provider     = databricks.account
-  display_name = upper("${var.prefix}-${each.value}-ws-admins")
-}
-
-resource "databricks_group" "workspace_user_group" {
-  for_each = toset(var.environments)
-
-  provider     = databricks.account
-  display_name = upper("${var.prefix}-${each.value}-ws-users")
-}

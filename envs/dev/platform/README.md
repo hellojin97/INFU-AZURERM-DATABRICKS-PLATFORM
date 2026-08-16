@@ -20,7 +20,6 @@ workspace를 **만드는** 계층이다. workspace 안을 **설정하는** 것�
 | `azurerm_role_assignment` | Access Connector에 `Storage Blob Data Contributor` (SA 범위로 한정) |
 | `azurerm_databricks_workspace` | `INFU-DEV-DATABRICKS-WS-CAC` (premium, VNet injection) |
 | `databricks_metastore_assignment` | account 계층의 metastore를 이 workspace에 연결 |
-| `databricks_mws_permission_assignment` | account 계층의 `INFU-DEV-WS-ADMINS` 그룹을 이 workspace에 `ADMIN`으로 바인딩 |
 
 `INFU-DEV-DATABRICKS-MANAGED-RG-CAC`는 Terraform이 만들지 않는다. workspace 생성 시 Databricks가 만들고 관리한다.
 
@@ -85,7 +84,7 @@ key        dev/platform.tfstate
 
 ## account 계층 참조
 
-`data "terraform_remote_state" "account"`가 `account.tfstate`를 읽어 `metastore_id`와 `workspace_admin_group_ids`를 가져온다. 값을 복사해 붙여넣지 않는다.
+`data "terraform_remote_state" "account"`가 `account.tfstate`를 읽어 `metastore_id`를 가져온다. 값을 복사해 붙여넣지 않는다.
 
 이 data 블록의 `config`는 root의 `backend` 블록에서 아무것도 물려받지 않는다. 그래서 `account/backend.hcl`과 같은 값을 다시 적는다.
 

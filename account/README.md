@@ -20,13 +20,10 @@ metastore (canadacentral)
 | 리소스 | 이름 |
 |---|---|
 | `databricks_metastore` | `INFU-UC-METASTORE-CAC` |
-| `databricks_group` | `INFU-<ENV>-WS-ADMINS` (환경마다 하나) |
 
-metastore 이름은 계정 전체에서 유일해야 한다. 이 테넌트는 여러 사람이 공유해 짧은 이름은 충돌 위험. 접두사 규칙이 막는다.
+metastore 이름은 계정 전체에서 유일해야 한다. 이 테넌트는 여러 사람이 공유해 짧은 이름은 충돌 위험. 접두사 규칙이 막는다. 리전 단위 리소스라 리전 약어도 붙인다.
 
-metastore에는 리전 약어 붙이고 그룹에는 안 붙인다. metastore는 리전 단위 리소스라 다른 리전에 또 만들면 이름 구분 필요. account 그룹은 계정 전역 식별자라 리전에 안 속하고 여러 리전 metastore에 동시 권한 가능.
-
-그룹을 workspace에 붙이는 `databricks_mws_permission_assignment`는 여기 두지 않는다. workspace ID가 필요해 `envs/<env>/platform/` 소관이다. 이 계층은 `workspace_admin_group_ids` output으로 그룹 ID만 넘긴다.
+account 그룹은 Terraform으로 관리하지 않는다. 그룹 생성·삭제와 membership은 온보딩·오프보딩 운영 작업이라 Databricks 콘솔에서 수동 관리한다.
 
 ## 의도적으로 지정하지 않은 인자
 
@@ -54,7 +51,7 @@ metastore에는 리전 약어 붙이고 그룹에는 안 붙인다. metastore는
 | 값 | 경로 |
 |---|---|
 | `databricks_account_id` `azure_client_id` `azure_tenant_id` | `TF_VAR_` 환경 변수. 저장소 public이라 파일에 안 둔다 |
-| `prefix` `location` `location_abbreviation` `environments` | `terraform.tfvars` |
+| `prefix` `location` `location_abbreviation` | `terraform.tfvars` |
 | backend 신원 | `ARM_CLIENT_ID` `ARM_TENANT_ID` `ARM_SUBSCRIPTION_ID` |
 
 실제 값은 GitHub repository variable에 있다.
