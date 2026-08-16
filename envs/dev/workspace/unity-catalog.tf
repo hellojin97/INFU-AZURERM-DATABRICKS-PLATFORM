@@ -18,3 +18,15 @@ resource "databricks_external_location" "managed" {
   name            = "${local.name_prefix}-MANAGED-LOCATION"
   url             = "abfss://${data.terraform_remote_state.platform.outputs.managed_container_name}@${data.terraform_remote_state.platform.outputs.adls_storage_account_name}.dfs.core.windows.net/"
 }
+
+# name: SQL 식별자라 언더스코어. env로 환경 구분
+# ISOLATED: 현재 workspace만 바인딩. 기본 OPEN = 전 workspace 노출
+# owner: 콘솔 수동 생성 그룹. CI SP가 멤버라 Terraform 관리 지속, 사람은 assume으로만 owner 권한 사용
+# force_destroy 미지정: 기본 false. 내용물 있으면 destroy 실패해 카탈로그 보호
+resource "databricks_catalog" "this" {
+  name           = "${var.prefix}_${var.env}"
+  storage_root   = databricks_external_location.managed.url
+  isolation_mode = "ISOLATED"
+  owner          = "${local.name_prefix}-CATALOG-ADMINS"
+  comment        = "개발 환경 기본 카탈로그"
+}
