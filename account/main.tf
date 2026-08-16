@@ -13,6 +13,7 @@ resource "databricks_metastore" "this" {
 
   # storage_root를 지정하지 않는다. 카탈로그마다 스토리지를 따로 두는 방식이다.
   # force_destroy도 지정하지 않는다. 기본값 false라 카탈로그가 있으면 destroy가 실패한다.
-  # owner도 지금은 지정하지 않는다. CI SP가 속하지 않은 그룹을 소유자로 두면
-  # 이후 SP가 metastore를 수정하지 못할 수 있다. 4단계에서 다시 다룬다.
+
+  # owner: 콘솔 수동 생성 그룹. CI SP가 멤버여야 Terraform이 metastore 수정 가능
+  owner = upper("${var.prefix}-metastore-${var.location_abbreviation}-admins")
 }
