@@ -29,3 +29,10 @@ resource "databricks_group" "workspace_admin_group" {
   provider     = databricks.account
   display_name = upper("${var.prefix}-${each.value}-ws-admins")
 }
+
+resource "databricks_group" "workspace_user_group" {
+  for_each = toset(var.environments)
+
+  provider = databricks.account
+  display_name = upper("${var.prefix}-${each.value}-ws-users")
+}
