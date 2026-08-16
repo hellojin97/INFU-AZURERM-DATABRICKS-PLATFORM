@@ -57,13 +57,3 @@ resource "databricks_metastore_assignment" "this" {
   # Azure 리소스 ID가 아니라 Databricks 제어 평면의 숫자 ID다.
   workspace_id = azurerm_databricks_workspace.this.workspace_id
 }
-
-resource "databricks_mws_permission_assignment" "workspace_admins" {
-  provider = databricks.account
-
-  workspace_id = azurerm_databricks_workspace.this.workspace_id
-  principal_id = data.terraform_remote_state.account.outputs.workspace_admin_group_ids[var.env]
-  permissions  = ["ADMIN"]
-
-  depends_on = [databricks_metastore_assignment.this]
-}
