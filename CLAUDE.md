@@ -16,7 +16,7 @@ Terraform이 소유:
 
 - Azure 리소스: Resource Group, VNet/Subnet(VNet injection), NSG, Storage Account(ADLS Gen2), Key Vault, Private Endpoint
 - `azurerm_databricks_workspace`, Access Connector / Managed Identity
-- Account 레벨: metastore, metastore assignment, account group/user/service principal, entitlement. 단 group **membership**(사람 배치)은 온보딩·오프보딩 운영 작업이라 Terraform 밖에서 수동 관리한다
+- Account 레벨: metastore, metastore assignment, account service principal, entitlement. 단 group은 생성·membership 모두 온보딩·오프보딩 운영 작업이라 Terraform 밖에서 수동 관리한다
 - Workspace 레벨 거버넌스: storage credential, external location, catalog/schema 골격, permission/grant, cluster policy, instance pool, secret scope(백엔드 정의)
 
 DAB가 소유 (Terraform으로 만들지 말 것):
@@ -38,7 +38,7 @@ DAB가 소유 (Terraform으로 만들지 말 것):
 
 ```
 modules/               재사용 모듈. 환경/이름 하드코딩 금지, provider 블록 금지
-account/               계정 전역. metastore, account group/SP, entitlement
+account/               계정 전역. metastore, account SP, entitlement
 envs/<env>/platform/   Azure 인프라 + workspace 생성
 envs/<env>/workspace/  workspace 내부 거버넌스
 ```
