@@ -31,7 +31,8 @@ account 그룹은 Terraform으로 관리하지 않는다. 그룹 생성·삭제�
 |---|---|
 | `storage_root` | 카탈로그마다 스토리지 따로 둔다. Databricks 권장 방식 |
 | `force_destroy` | 기본값 `false` 유지. 카탈로그 있으면 `destroy` 실패해 리전 유일 리소스 보호 |
-| `owner` | CI Service Principal이 안 속한 그룹을 소유자로 두면 이후 SP가 metastore 수정 못 할 수 있다. grant 구조 잡힌 뒤 다시 다룬다 |
+
+`owner`는 지정한다. 콘솔에서 수동 생성한 `INFU-METASTORE-CAC-ADMINS` 그룹이 소유자다. CI SP가 이 그룹 멤버여야 Terraform이 metastore를 계속 수정할 수 있다.
 
 ## 파일
 
