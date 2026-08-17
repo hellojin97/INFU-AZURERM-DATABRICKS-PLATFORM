@@ -18,6 +18,7 @@ Terraform이 소유:
 - `azurerm_databricks_workspace`, Access Connector / Managed Identity
 - Account 레벨: metastore, metastore assignment, account service principal, entitlement. 단 group은 생성·membership·workspace 할당(permission assignment) 모두 온보딩·오프보딩 운영 작업이라 Terraform 밖에서 수동 관리한다
 - Workspace 레벨 거버넌스: storage credential, external location, catalog/schema 골격, permission/grant, cluster policy, instance pool, secret scope(백엔드 정의)
+- serverless 네트워크: NCC(binding, private endpoint rule), network policy. account 레벨 객체지만 `envs/<env>/platform`에서 관리
 
 DAB가 소유 (Terraform으로 만들지 말 것):
 
