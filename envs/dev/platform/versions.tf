@@ -20,6 +20,11 @@ terraform {
       # account 계층과 동일 버전. 계층별 버전 차이 = 동작 차이
       version = "~> 1.124"
     }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.7"
+    }
   }
 
   # backend 블록: state 저장 위치. 라벨(azurerm) = backend 종류
