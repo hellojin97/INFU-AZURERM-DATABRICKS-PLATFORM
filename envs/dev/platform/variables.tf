@@ -68,11 +68,11 @@ variable "subnet_privatelink_cidr" {
 
 variable "pg_admin_object_id" {
   type        = string
-  description = "PG Entra admin 그룹의 object ID"
+  description = "PG Entra admin의 object ID"
   sensitive   = true
 }
 
 variable "pg_admin_principal_name" {
   type        = string
-  description = "PG Entra admin 그룹 이름. 접속 시 username으로 사용"
+  description = "PG Entra admin의 UPN. 접속 시 username으로 사용"
 }

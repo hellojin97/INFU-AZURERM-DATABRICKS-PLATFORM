@@ -31,14 +31,15 @@ resource "azurerm_postgresql_flexible_server" "this" {
   tags = local.tags
 }
 
-# admin은 콘솔 수동 관리 Entra 그룹. 앱 user CREATE ROLE은 이 admin으로 접속해 수동 실행
+# admin은 운영자 개인 Entra 계정. 팀 확장 시 그룹으로 교체(변수 값 + principal_type만 변경)
+# 앱 user CREATE ROLE은 이 admin으로 접속해 수동 실행
 resource "azurerm_postgresql_flexible_server_active_directory_administrator" "this" {
   server_name         = azurerm_postgresql_flexible_server.this.name
   resource_group_name = azurerm_resource_group.platform.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
   object_id           = var.pg_admin_object_id
   principal_name      = var.pg_admin_principal_name
-  principal_type      = "Group"
+  principal_type      = "User"
 }
 
 # 이름은 Azure 고정 문자열. dfs/blob zone과 같은 구조
