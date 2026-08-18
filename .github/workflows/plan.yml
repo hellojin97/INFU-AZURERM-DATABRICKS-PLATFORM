@@ -22,6 +22,7 @@ env:
   TF_VAR_databricks_account_id: ${{ vars.DATABRICKS_ACCOUNT_ID }}
   TF_VAR_azure_client_id: ${{ vars.AZURE_CLIENT_ID }}
   TF_VAR_azure_tenant_id: ${{ vars.AZURE_TENANT_ID }}
+  TF_VAR_pg_admin_object_id: ${{ vars.PG_ADMIN_OBJECT_ID }}
 
 jobs:
   # Databricks account는 테넌트당 하나뿐이라 환경 밖에 둔다.

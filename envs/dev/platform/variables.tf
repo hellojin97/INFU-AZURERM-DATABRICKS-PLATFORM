@@ -65,3 +65,14 @@ variable "subnet_privatelink_cidr" {
   type        = string
   description = "Private Endpoint 전용 서브넷 주소 범위"
 }
+
+variable "pg_admin_object_id" {
+  type        = string
+  description = "PG Entra admin의 object ID"
+  sensitive   = true
+}
+
+variable "pg_admin_principal_name" {
+  type        = string
+  description = "PG Entra admin의 UPN. 접속 시 username으로 사용"
+}
