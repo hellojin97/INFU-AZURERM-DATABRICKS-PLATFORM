@@ -28,3 +28,11 @@ resource "databricks_mws_ncc_private_endpoint_rule" "adls_blob" {
   resource_id                    = azurerm_storage_account.adls.id
   group_id                       = "blob"
 }
+
+# Databricks App(serverless) → PG 경로. apply 후 pending 승인 필요한 건 ADLS rule과 동일
+resource "databricks_mws_ncc_private_endpoint_rule" "postgres" {
+  provider                       = databricks.account
+  network_connectivity_config_id = databricks_mws_network_connectivity_config.this.network_connectivity_config_id
+  resource_id                    = azurerm_postgresql_flexible_server.this.id
+  group_id                       = "postgresqlServer"
+}
