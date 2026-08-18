@@ -9,6 +9,11 @@ resource "azurerm_postgresql_flexible_server" "this" {
   resource_group_name = azurerm_resource_group.platform.name
   location            = azurerm_resource_group.platform.location
 
+  # password_auth_enabled = true면 native admin 필수 (apply 시점 검사라 validate로 못 잡음)
+  # 사람은 Entra admin으로 접속. 이 계정은 생성 요건 충족용, 자격 증명 배포 안 함
+  administrator_login    = "pgadmin"
+  administrator_password = random_password.pg_admin.result
+
   # B_Standard_B1ms = Burstable 최소 SKU. dev 전용, 병목 시 SKU만 교체
   version  = "16"
   sku_name = "B_Standard_B1ms"
@@ -76,4 +81,10 @@ resource "azurerm_private_endpoint" "postgres" {
   }
 
   tags = local.tags
+}
+
+# 값은 state에만 존재. special 제외 = 연결 문자열 이스케이프 문제 예방
+resource "random_password" "pg_admin" {
+  length  = 24
+  special = false
 }
