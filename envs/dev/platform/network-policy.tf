@@ -4,6 +4,9 @@ resource "databricks_account_network_policy" "this" {
   provider          = databricks.account
   network_policy_id = "infu-dev-network-policy"
 
+  # 생략 시 computed라 변경 때마다 unknown 처리되어 replace 유발. 명시해 in-place update 유지
+  account_id = var.databricks_account_id
+
   egress = {
     network_access = {
       restriction_mode = "RESTRICTED_ACCESS"
