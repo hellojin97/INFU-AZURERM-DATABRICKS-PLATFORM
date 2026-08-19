@@ -14,7 +14,7 @@ resource "databricks_service_principal_federation_policy" "app_deploy" {
   # subject는 완전 일치. 값 바뀌는 ref 대신 고정된 environment 사용, 배포 job이 environment: dev 선언해야 인증
   oidc_policy = {
     issuer    = "https://token.actions.githubusercontent.com"
-    audiences = ["https://github.com/hellojin97"]
+    audiences = ["https://adb-7405605204277280.0.azuredatabricks.net/oidc/v1/token"]
     subject   = "repo:hellojin97/INFU-DAB-DATABRICKS-APP:environment:dev"
   }
 }
