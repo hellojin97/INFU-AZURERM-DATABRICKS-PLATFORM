@@ -4,3 +4,10 @@
 resource "databricks_secret_scope" "app" {
   name = "${var.prefix}-${var.env}-app"
 }
+
+# scope 생성자(CI SP)만 MANAGE라 사람은 값 주입 불가. 콘솔 수동 관리 그룹에 부여
+resource "databricks_secret_acl" "app_admins" {
+  scope      = databricks_secret_scope.app.name
+  principal  = "${local.name_prefix}-WS-ADMINS"
+  permission = "MANAGE"
+}
