@@ -15,6 +15,6 @@ resource "databricks_service_principal_federation_policy" "app_deploy" {
   oidc_policy = {
     issuer    = "https://token.actions.githubusercontent.com"
     audiences = ["https://adb-7405605204277280.0.azuredatabricks.net/oidc/v1/token"]
-    subject   = "repo:hellojin97/INFU-DAB-DATABRICKS-APP:environment:dev"
+    subject   = "repo:hellojin97@96719728/INFU-DAB-DATABRICKS-APP@1339704553:environment:dev"
   }
 }
